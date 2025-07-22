@@ -1,0 +1,22 @@
+---
+deployment:
+  tasks:
+    # 1. Definir el path donde se hace el deploy
+    - export DEPLOY_PATH=/home/agrovialsl/beta.borei.com.ar
+
+    # 2. Copiar los archivos del repo al directorio de deploy (excepto .git)
+    - /bin/rsync -av --exclude='.git' --exclude='.cpanel.yml' ./ $DEPLOY_PATH
+
+    # 3. Instalar dependencias de Laravel (asume que hay composer en el sistema)
+    - cd $DEPLOY_PATH
+    - /opt/cpanel/composer/bin/composer install --no-interaction --prefer-dist --optimize-autoloader
+
+    # 4. Dar permisos necesarios
+    - /bin/chmod -R 775 storage bootstrap/cache
+    - /bin/chown -R fcasas:fcasas storage bootstrap/cache
+
+    # 5. Ejecutar comandos de Laravel
+    - /usr/bin/php artisan migrate --force
+    - /usr/bin/php artisan config:cache
+    - /usr/bin/php artisan route:cache
+    - /usr/bin/php artisan view:cache
